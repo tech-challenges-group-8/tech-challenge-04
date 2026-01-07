@@ -60,22 +60,18 @@ export default function NumericInputField({
       onChange={(e) => {
         let val = e.target.value;
 
-        // 1. Bloqueia sinais e caracteres inválidos
         if (val.includes("-")) return;
 
-        // 2. Validação de casas decimais em tempo real
         if (val.includes(".")) {
           const [, fraction] = val.split(".");
           if (fraction && fraction.length > 2) return;
         }
-
-        // 3. Validação do valor máximo (999.999.999,99)
         const numericValue = parseFloat(val);
         if (numericValue > MAX_ALLOWED_VALUE) return;
 
         onChange(e);
       }}
-      onBlur={handleBlur} // Garante a máscara de 2 casas ao terminar de digitar
+      onBlur={handleBlur} 
       placeholder={placeholder || t("newTransaction.valuePlaceholder")}
       type="number"
       label={label || t("newTransaction.valueLabel")}
