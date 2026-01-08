@@ -134,6 +134,7 @@ Principais otimizações implementadas:
 - **Performance**: Lazy loading para rotas, memoização de componentes, re-renders otimizados
 - **Qualidade de Código**: Nomenclatura padronizada, estrutura melhorada, imports consistentes
 - **Experiência do Desenvolvedor**: Hooks customizados, tipos TypeScript centralizados, integração com Storybook
+- **Cache de Transações no Frontend**: Implementado cache em memória para o endpoint de listagem de transações (`GET /account/:id/statement`), reduzindo chamadas desnecessárias à API e melhorando a performance da interface. O cache possui TTL configurável via variável de ambiente (`VITE_CACHE_TTL_MS`) e é automaticamente atualizado ou invalidado em operações de criação, edição e exclusão de transações.
 
 ## Comandos do Storybook
 
