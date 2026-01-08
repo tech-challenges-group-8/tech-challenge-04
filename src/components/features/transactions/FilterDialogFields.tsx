@@ -1,6 +1,10 @@
 import { TextField, Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { getCommonInputStyles } from "../../../styles/commonStyles";
+import {
+  getCommonInputStyles,
+  getCommonInputLabelProps,
+} from "../../../styles/commonStyles";
+import { NumericInputField } from "../../ui";
 
 interface FilterDialogFieldsProps {
   dateFrom: string;
@@ -31,6 +35,7 @@ export default function FilterDialogFields({
 }: FilterDialogFieldsProps) {
   const { t } = useTranslation();
   const commonInputStyles = getCommonInputStyles(theme);
+  const commonInputLabelProps = getCommonInputLabelProps(theme);
 
   return (
     <Box display="flex" flexDirection="column" gap={2}>
@@ -41,14 +46,21 @@ export default function FilterDialogFields({
         value={dateFrom}
         onChange={(e) => onDateFromChange(e.target.value)}
         InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: commonInputLabelProps,
+        }}
         sx={{
           ...commonInputStyles,
+          mt: 3,
           "& input[type='date']::-webkit-calendar-picker-indicator": {
             cursor: "pointer",
           },
         }}
         inputProps={{
           max: dateTo || undefined,
+          onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+            (e.target as HTMLInputElement).showPicker?.();
+          },
         }}
       />
       <TextField
@@ -58,39 +70,41 @@ export default function FilterDialogFields({
         value={dateTo}
         onChange={(e) => onDateToChange(e.target.value)}
         InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: commonInputLabelProps,
+        }}
         sx={{
           ...commonInputStyles,
+          mt: 2,
           "& input[type='date']::-webkit-calendar-picker-indicator": {
             cursor: "pointer",
           },
         }}
         inputProps={{
           min: dateFrom || undefined,
+          onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+            (e.target as HTMLInputElement).showPicker?.();
+          },
         }}
       />
-      <TextField
+      <NumericInputField
         label={t("statement.filter.minValue")}
-        type="number"
-        fullWidth
         value={minValue}
-        onChange={(e) => onMinValueChange(e.target.value)}
-        sx={commonInputStyles}
-        inputProps={{
-          min: 0,
-          step: 0.01,
-          max: maxValue || undefined,
+        onChange={onMinValueChange}
+        useCurrencyMask
+        sx={{
+          mt: 2,
+          width: "100%",
         }}
       />
-      <TextField
+      <NumericInputField
         label={t("statement.filter.maxValue")}
-        type="number"
-        fullWidth
         value={maxValue}
-        onChange={(e) => onMaxValueChange(e.target.value)}
-        sx={commonInputStyles}
-        inputProps={{
-          min: minValue || 0,
-          step: 0.01,
+        onChange={onMaxValueChange}
+        useCurrencyMask
+        sx={{
+          mt: 2,
+          width: "100%",
         }}
       />
       <TextField
@@ -98,7 +112,14 @@ export default function FilterDialogFields({
         fullWidth
         value={description}
         onChange={(e) => onDescriptionChange(e.target.value)}
-        sx={commonInputStyles}
+        InputLabelProps={{ shrink: true }}
+        slotProps={{
+          inputLabel: commonInputLabelProps,
+        }}
+        sx={{
+          ...commonInputStyles,
+          mt: 2,
+        }}
         placeholder={
           t("statement.filter.descriptionPlaceholder") ||
           "Digite parte da descrição..."

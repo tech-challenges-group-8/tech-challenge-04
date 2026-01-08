@@ -11,4 +11,18 @@ export const getCommonInputStyles = (theme: Theme) => ({
   "& .MuiOutlinedInput-notchedOutline": {
     border: "none",
   },
+  "& .MuiOutlinedInput-notchedOutline legend": {
+    display: "none",
+  },
+});
+
+export const getCommonInputLabelProps = (theme: Theme) => ({
+  shrink: true,
+  sx: {
+    top: "-15px",
+    left: "-12px",
+    "&.Mui-focused": {
+      color: theme.palette.primary.main,
+    },
+  },
 });

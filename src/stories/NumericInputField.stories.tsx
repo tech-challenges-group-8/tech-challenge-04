@@ -36,11 +36,11 @@ export const Default: Story = {
     onChange: () => {}, // Added onChange to args
   },
   render: (args) => {
-    const StoryComponent = () => { // Wrap in a functional component
+    const StoryComponent = () => {
       const [value, setValue] = useState(args.value);
-      const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setValue(event.target.value);
-        args.onChange(event);
+      const handleChange = (val: string) => {
+        setValue(val);
+        args.onChange(val);
       };
       return <NumericInputField {...args} value={value} onChange={handleChange} />;
     };
@@ -57,11 +57,11 @@ export const WithError: Story = {
     onChange: () => {},
   },
   render: (args) => {
-    const StoryComponent = () => { // Wrap in a functional component
+    const StoryComponent = () => {
       const [value, setValue] = useState(args.value);
-      const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setValue(event.target.value);
-        args.onChange(event);
+      const handleChange = (val: string) => {
+        setValue(val);
+        args.onChange(val);
       };
       return <NumericInputField {...args} value={value} onChange={handleChange} />;
     };
@@ -78,11 +78,11 @@ export const WithInitialValue: Story = {
     onChange: () => {},
   },
   render: (args) => {
-    const StoryComponent = () => { // Wrap in a functional component
+    const StoryComponent = () => {
       const [value, setValue] = useState(args.value);
-      const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setValue(event.target.value);
-        args.onChange(event);
+      const handleChange = (val: string) => {
+        setValue(val);
+        args.onChange(val);
       };
       return <NumericInputField {...args} value={value} onChange={handleChange} />;
     };

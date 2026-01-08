@@ -58,10 +58,8 @@ export default function TransactionItem({ tx }: TransactionItemProps) {
     setEditError("");
   };
 
-  const handleValueChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setEditedValue(event.target.value);
+  const handleValueChange = (value: string) => {
+    setEditedValue(value);
     if (editError) setEditError("");
   };
 

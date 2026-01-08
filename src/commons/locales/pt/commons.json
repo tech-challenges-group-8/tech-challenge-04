@@ -18,8 +18,10 @@
     "errorSelectType": "Por favor, selecione o tipo de transação.",
     "errorInvalidValue": "Por favor, insira um valor válido maior que zero.",
     "typeLabel": "Tipo de transação",
+    "typePlaceholder": "Selecione o tipo de transação",
     "valueLabel": "Valor",
     "description": "Descrição",
+    "descriptionPlaceholder": "Digite a descrição da transação",
     "valuePlaceholder": "R$0,00",
     "loadingButton": "Inserindo transação...",
     "completeButton": "Concluir transação",
@@ -28,6 +30,9 @@
   },
   "header": {
     "logout": "Sair"
+  },
+  "validation": {
+    "minAmount": "O valor mínimo é R$ 0,01"
   },
   "account": {
     "openMyAccount": "Abrir minha conta",

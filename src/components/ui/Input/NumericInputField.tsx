@@ -3,20 +3,40 @@ import { useTranslation } from "react-i18next";
 
 export interface NumericInputFieldProps {
   value: string;
-  onChange: (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void;
+  onChange: (value: string) => void;
   placeholder?: string;
   error?: boolean;
   helperText?: string;
   sx?: object;
   disabled?: boolean;
   label?: string;
+  useCurrencyMask?: boolean;
 }
 
-/**
- * NumericInputField - Styled numeric input field for currency/amounts
- */
+const MAX_VALUE = 999999999.99;
+const MAX_CENTS = MAX_VALUE * 100;
+
+// Format cents to currency display: 12345 -> "R$ 123,45"
+const formatCurrency = (cents: number): string => {
+  const value = cents / 100;
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+};
+
+// Parse string value to cents: "123.45" -> 12345
+const valueToCents = (value: string): number => {
+  if (!value) return 0;
+  const num = parseFloat(value);
+  return isNaN(num) ? 0 : Math.round(num * 100);
+};
+
+// Convert cents to decimal string: 12345 -> "123.45"
+const centsToValue = (cents: number): string => {
+  return (cents / 100).toFixed(2);
+};
+
 export default function NumericInputField({
   value,
   onChange,
@@ -26,96 +46,115 @@ export default function NumericInputField({
   sx,
   disabled,
   label,
+  useCurrencyMask = false,
 }: NumericInputFieldProps) {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const MAX_ALLOWED_VALUE = 999999999.99;
+  // For currency mask: handle digit input (right-to-left entry)
+  const handleCurrencyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const currentCents = valueToCents(value);
 
-  const commonInputStyles = {
-    backgroundColor: "#fff",
-    border: `1px solid ${theme.palette.primary.main}`,
-    borderRadius: "8px",
-    "& .MuiInputBase-input": {
-      padding: "12px 8px",
-      height: "24px",
-    },
-    "& .MuiOutlinedInput-notchedOutline": {
-      border: "none",
-    },
-  };
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      const newCents = Math.floor(currentCents / 10);
+      onChange(centsToValue(newCents));
+      return;
+    }
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    if (!isNaN(val)) {
-      // Força exatamente 2 casas decimais ao sair do campo
-      e.target.value = val.toFixed(2);
-      onChange(e);
+    if (e.key === "Delete") {
+      e.preventDefault();
+      onChange("0");
+      return;
+    }
+
+    // Only allow digits
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+
+    e.preventDefault();
+    const digit = parseInt(e.key, 10);
+    const newCents = currentCents * 10 + digit;
+
+    if (newCents <= MAX_CENTS) {
+      onChange(centsToValue(newCents));
     }
   };
 
+  // For regular number input
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (!newValue) {
+      onChange("");
+      return;
+    }
+    if (newValue.includes("-")) return;
+    const [, fraction] = newValue.split(".");
+    if (fraction && fraction.length > 2) return;
+    const num = parseFloat(newValue);
+    if (!isNaN(num) && num <= MAX_VALUE) {
+      onChange(newValue);
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (useCurrencyMask) return;
+    const num = parseFloat(e.target.value);
+    if (!isNaN(num)) {
+      onChange(num.toFixed(2));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (["-", "e", "+"].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const displayValue = useCurrencyMask ? formatCurrency(valueToCents(value)) : value;
+  const showMinAmountError = value && parseFloat(value) < 0.01;
+
   return (
     <TextField
-      value={value}
-      onChange={(e) => {
-        let val = e.target.value;
-
-        if (val.includes("-")) return;
-
-        if (val.includes(".")) {
-          const [, fraction] = val.split(".");
-          if (fraction && fraction.length > 2) return;
-        }
-        const numericValue = parseFloat(val);
-        if (numericValue > MAX_ALLOWED_VALUE) return;
-
-        onChange(e);
-      }}
-      onBlur={handleBlur} 
+      value={displayValue}
+      onChange={useCurrencyMask ? undefined : handleChange}
+      onBlur={handleBlur}
       placeholder={placeholder || t("newTransaction.valuePlaceholder")}
-      type="number"
+      type={useCurrencyMask ? "text" : "number"}
       label={label || t("newTransaction.valueLabel")}
       error={error}
-      helperText={
-        value && parseFloat(value) < 0.01
-          ? t("validation.minAmount")
-          : helperText
-      }
+      helperText={showMinAmountError ? t("validation.minAmount") : helperText}
+      disabled={disabled}
       slotProps={{
-        input: {
-          style: { height: 48 },
-        },
-        htmlInput: {
-          min: 0,
-          step: 0.01,
-          onKeyDown: (e: any) =>
-            ["-", "e", "+"].includes(e.key) && e.preventDefault(),
-        },
+        input: { style: { height: 48 } },
+        htmlInput: useCurrencyMask
+          ? { onKeyDown: handleCurrencyKeyDown, inputMode: "numeric" }
+          : { min: 0, step: 0.01, onKeyDown: handleKeyDown },
         inputLabel: {
           shrink: true,
           sx: {
             top: "-15px",
             left: "-12px",
-            "&.Mui-focused": {
-              color: theme.palette.primary.main,
-            },
+            "&.Mui-focused": { color: theme.palette.primary.main },
           },
         },
       }}
       sx={{
-        ...commonInputStyles,
+        backgroundColor: "#fff",
+        border: `1px solid ${theme.palette.primary.main}`,
+        borderRadius: "8px",
         zIndex: 1,
         "& .MuiInputBase-input": {
-          ...commonInputStyles["& .MuiInputBase-input"],
-          textAlign: "center",
+          padding: "12px 8px",
+          height: "24px",
+          textAlign: "left",
         },
-        "& .MuiOutlinedInput-notchedOutline legend": {
-          display: "none",
-        },
-        // marginTop: "25px",
+        "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+        "& .MuiOutlinedInput-notchedOutline legend": { display: "none" },
         ...sx,
       }}
-      disabled={disabled}
     />
   );
 }

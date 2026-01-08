@@ -6,12 +6,8 @@ import {
   Select,
   Typography,
   useTheme,
-  Button,
   TextField,
 } from "@mui/material";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import ClearIcon from "@mui/icons-material/Clear";
-import IconButton from "@mui/material/IconButton";
 import { useSnackbar } from "notistack";
 import type { VariantType } from "notistack";
 import { useState } from "react";
@@ -19,9 +15,13 @@ import { useTranslation } from "react-i18next";
 
 import { useUser } from "../../../contexts/UserContext";
 import { useTransactions } from "../../../hooks/useTransactions";
-import { getCommonInputStyles } from "../../../styles/commonStyles";
+import {
+  getCommonInputStyles,
+  getCommonInputLabelProps,
+} from "../../../styles/commonStyles";
 
 import { LoadingButton, NumericInputField, PageTitle } from "../../ui";
+import FileUpload from "./FileUpload";
 
 const TRANSACTION_TYPES = (t: any) => [
   { value: "DEPOSIT", label: t("newTransaction.typeDeposit") },
@@ -42,33 +42,10 @@ export default function NewTransaction() {
   const [description, setDescription] = useState<string | null>(null);
 
   const commonInputStyles = getCommonInputStyles(theme);
+  const commonInputLabelProps = getCommonInputLabelProps(theme);
 
   const handleFeedback = (variant: VariantType, message: string) => () => {
     enqueueSnackbar(message, { variant });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    const allowedExtensions = ["image/jpeg", "image/png", "application/pdf"];
-    if (!allowedExtensions.includes(selectedFile.type)) {
-      handleFeedback(
-        "error",
-        "Apenas arquivos JPG, PNG ou PDF são permitidos"
-      )();
-      e.target.value = "";
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-    if (selectedFile.size > maxSize) {
-      handleFeedback("error", "O arquivo deve ter no máximo 5MB")();
-      e.target.value = "";
-      return;
-    }
-
-    setFile(selectedFile);
   };
 
   const handleSubmit = async () => {
@@ -136,19 +113,15 @@ export default function NewTransaction() {
           sx={{
             width: { xs: "100%", sm: "355px" },
             alignSelf: "flex-start",
+            mb: 2,
           }}
         >
           <InputLabel
             id="transaction-type-label"
+            shrink
             sx={{
               color: type ? theme.palette.primary.main : undefined,
-              "&.Mui-focused": {
-                color: theme.palette.primary.main,
-                top: "-15px",
-                left: "-15px",
-              },
-              top: "-15px",
-              left: "-10px",
+              ...commonInputLabelProps.sx,
             }}
             className="InputLabelCustom"
           >
@@ -158,16 +131,29 @@ export default function NewTransaction() {
             labelId="transaction-type-label"
             id="transaction-type-select"
             value={type}
-            label={t("newTransaction.typeLabel") || "Tipo"}
             onChange={(e) => {
               setType(e.target.value);
               if (error) setError("");
+            }}
+            displayEmpty
+            renderValue={(selected) => {
+              if (!selected) {
+                return (
+                  <span style={{ color: theme.palette.text.disabled }}>
+                    {t("newTransaction.typePlaceholder") || "Selecione o tipo de transação"}
+                  </span>
+                );
+              }
+              return TRANSACTION_TYPES(t).find((type) => type.value === selected)?.label;
             }}
             sx={{
               ...commonInputStyles,
               height: "48px",
               width: { xs: "100%", sm: "400px" },
               "& .MuiSelect-icon": { color: theme.palette.primary.main },
+              "& .MuiSelect-select": {
+                textAlign: "left",
+              },
             }}
             disabled={isSubmitting}
           >
@@ -182,86 +168,54 @@ export default function NewTransaction() {
           </Select>
         </FormControl>
 
-        <Box display="flex" flexDirection="column" gap={3}>
+        <Box display="flex" flexDirection="column" gap={2}>
           <TextField
             label={t("newTransaction.description")}
             type="text"
             fullWidth
             value={description}
-            style={{ marginTop: theme.spacing(2) }}
             onChange={(e) => setDescription(e.target.value)}
+            placeholder={t("newTransaction.descriptionPlaceholder") || "Digite a descrição da transação"}
             InputLabelProps={{ shrink: true }}
             inputProps={{ maxLength: 255 }}
             slotProps={{
               htmlInput: {
                 maxLength: 255,
               },
-              inputLabel: {
-                shrink: true,
-                sx: {
-                  top: "-15px",
-                  left: "-12px",
-                  "&.Mui-focused": {
-                    color: theme.palette.primary.main,
-                  },
-                },
-              },
+              inputLabel: commonInputLabelProps,
             }}
             sx={{
               ...commonInputStyles,
-              mb: 2,
+              m: "0 2",
               width: { xs: "100%", sm: "400px" },
-              "& .MuiOutlinedInput-notchedOutline legend": {
-                display: "none",
-              },
+              mb: 2,
             }}
           />
-          <Box display="flex" alignItems="center" gap={1}>
-            <Button
-              variant="outlined"
-              component="label"
-              startIcon={<AttachFileIcon />}
-              sx={{
-                width: { xs: "100%", sm: "250px" },
-                alignSelf: "flex-start",
-              }}
-            >
-              {file ? file.name : "Anexar arquivo"}
-              <input
-                type="file"
-                hidden
-                onChange={handleFileChange}
-                disabled={isSubmitting}
-              />
-            </Button>
-            {file && (
-              <IconButton
-                aria-label="Remover anexo"
-                onClick={() => setFile(null)}
-                disabled={isSubmitting}
-                sx={{ color: theme.palette.error.main }}
-              >
-                <ClearIcon />
-              </IconButton>
-            )}
-          </Box>
           <NumericInputField
             value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
+            onChange={(val) => {
+              setValue(val);
               if (error) setError("");
             }}
+            useCurrencyMask
             placeholder={t("newTransaction.valuePlaceholder")}
             sx={{
               zIndex: 1,
               width: { xs: "100%", sm: "400px" },
+              mb: 2,
               "& .MuiInputBase-input": {
-                textAlign: "center",
+                textAlign: "left",
               },
             }}
             error={!!error || (value !== "" && parseFloat(value) < 0.01)}
             helperText={error}
             disabled={isSubmitting}
+          />
+          <FileUpload
+            file={file}
+            onFileChange={setFile}
+            disabled={isSubmitting}
+            sx={{ mb: 3 }}
           />
         </Box>
 

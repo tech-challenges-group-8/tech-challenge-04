@@ -17,7 +17,6 @@ export default function PageTitle({
   variant = "h4" 
 }: PageTitleProps) {
   const theme = useTheme();
-  const neutral200 = (theme.palette as any).neutral?.[200] ?? "#dee9ea";
 
   return (
     <Typography
@@ -25,7 +24,7 @@ export default function PageTitle({
       fontWeight="bold"
       mb={2}
       sx={{ 
-        color: { xs: theme.palette.primary.main, sm: neutral200 }, 
+        color: theme.palette.primary.main,
         ...(sx as any) 
       }}
     >

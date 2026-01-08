@@ -18,8 +18,11 @@
     "errorSelectType": "Please select a transaction type.",
     "errorInvalidValue": "Please enter a valid value greater than zero.",
     "typeLabel": "Transaction Type",
+    "typePlaceholder": "Select transaction type",
     "valueLabel": "Value",
     "valuePlaceholder": "0.00",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter the transaction description",
     "loadingButton": "Inserting transaction...",
     "completeButton": "Complete Transaction",
     "nameLabel": "Name",
@@ -63,6 +66,9 @@
   "headerHome": {
     "about": "About",
     "services": "Services"
+  },
+  "validation": {
+    "minAmount": "Minimum amount is 0.01"
   },
   "footerHome": {
     "servicesTitle": "Services",
