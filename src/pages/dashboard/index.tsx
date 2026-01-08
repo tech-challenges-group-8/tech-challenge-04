@@ -1,4 +1,4 @@
-import { Container } from "@mui/material";
+import { Container, Box } from "@mui/material";
 import { CardBackground, PageTitle } from "../../components/ui";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -29,6 +29,7 @@ ChartJS.register(
 
 const chartOptions: ChartOptions<"line"> = {
   responsive: true,
+  maintainAspectRatio: true,
   plugins: {
     legend: {
       position: "top",
@@ -38,7 +39,13 @@ const chartOptions: ChartOptions<"line"> = {
       text: "Evolução das Transações no Tempo",
     },
   },
+  scales: {
+    y: {
+      beginAtZero: true,
+    },
+  },
 };
+
 interface Transaction {
   accountId: string;
   date: string;
@@ -115,21 +122,44 @@ export default function Dashboard() {
           data: sorted.map((t) => (t.type === "DEPOSIT" ? t.value : 0)),
           borderColor: "rgb(75, 192, 192)",
           backgroundColor: "rgba(75, 192, 192, 0.5)",
+          tension: 0.4,
         },
         {
           label: "Transferências",
           data: sorted.map((t) => (t.type === "TRANSFER" ? t.value : 0)),
           borderColor: "rgb(255, 99, 132)",
           backgroundColor: "rgba(255, 99, 132, 0.5)",
+          tension: 0.4,
         },
       ],
     };
   }, [transactions]);
+
   return (
     <CardBackground>
       <Container>
         <PageTitle>Dashboard</PageTitle>
-        <Line options={chartOptions} data={chartData} />
+        <Box
+          sx={{
+            position: "relative",
+            width: "100%",
+            paddingBottom: "56.25%",
+            height: 0,
+            mb: 3,
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            <Line options={chartOptions} data={chartData} />
+          </Box>
+        </Box>
       </Container>
     </CardBackground>
   );
