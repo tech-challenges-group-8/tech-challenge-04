@@ -6,7 +6,6 @@ export const apiClient = {
       cache: "no-store",
       ...options,
       headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
         ...(options.headers as Record<string, string>),
         ...getAuthHeaders(),
       },

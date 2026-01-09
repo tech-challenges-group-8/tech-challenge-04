@@ -1,38 +1,31 @@
 
 import { apiClient } from "./apiClient";
+import { transactionsCache } from "./cache";
 import type { Transaction, NewTransaction } from "./types";
 
-const CACHE_TTL_MS = Number((import.meta as any)?.env?.VITE_CACHE_TTL_MS) || 30_000;
-type CacheEntry = { timestamp: number; data: Transaction[] };
-const transactionsCache = new Map<string, CacheEntry>();
+const sortByDateDesc = (transactions: Transaction[]): Transaction[] =>
+  [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 export const transactionApi = {
-  getTransactions: async (id: string) => {
-    const cached = transactionsCache.get(id);
-    const now = Date.now();
-    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
-      return cached.data;
-    }
+  getTransactions: async (accountId: string): Promise<Transaction[]> => {
+    const cached = transactionsCache.get(accountId);
+    if (cached) return cached;
 
-    const response = await apiClient.get(`/account/${id}/statement`);
+    const response = await apiClient.get(`/account/${accountId}/statement`);
     const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || "Failed to load transactions");
     }
 
-    const sorted: Transaction[] = data.result.transactions.sort((a: Transaction, b: Transaction) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
-    transactionsCache.set(id, { timestamp: now, data: sorted });
+    const sorted = sortByDateDesc(data.result.transactions);
+    transactionsCache.set(accountId, sorted);
 
     return sorted;
   },
 
-  createTransaction: async (transaction: NewTransaction) => {
+  createTransaction: async (transaction: NewTransaction): Promise<Transaction> => {
     const response = await apiClient.post("/account/transaction", transaction);
-
     const data = await response.json();
 
     if (!response.ok) {
@@ -41,31 +34,24 @@ export const transactionApi = {
 
     const savedTx: Transaction = data.result;
 
-    const accountId = savedTx.accountId;
-    const cached = transactionsCache.get(accountId);
-    if (cached) {
-      transactionsCache.set(accountId, { timestamp: Date.now(), data: [savedTx, ...cached.data] });
-    }
+    transactionsCache.update(savedTx.accountId, (transactions) => [savedTx, ...transactions]);
 
     return savedTx;
   },
 
-  deleteTransaction: async (transactionId: string, accountId: string) => {
-    
+  deleteTransaction: async (transactionId: string, accountId: string): Promise<void> => {
     const response = await apiClient.delete(`/account/${accountId}/transaction/${transactionId}/`);
 
     if (!response.ok) {
       throw new Error("Failed to delete transaction");
     }
 
-    const cached = transactionsCache.get(accountId);
-    if (cached) {
-      const filtered = cached.data.filter((t) => t.id !== transactionId);
-      transactionsCache.set(accountId, { timestamp: Date.now(), data: filtered });
-    }
+    transactionsCache.update(accountId, (transactions) =>
+      transactions.filter((t) => t.id !== transactionId)
+    );
   },
 
-  updateTransaction: async (transaction: Transaction) => {
+  updateTransaction: async (transaction: Transaction): Promise<Transaction> => {
     const response = await apiClient.patch(
       `/account/${transaction.accountId}/transaction/${transaction.id}/`,
       transaction
@@ -75,13 +61,18 @@ export const transactionApi = {
       throw new Error("Failed to update transaction");
     }
 
-    const accountId = transaction.accountId;
-    const cached = transactionsCache.get(accountId);
-    if (cached) {
-      const updated = cached.data.map((t) => (t.id === transaction.id ? transaction : t));
-      transactionsCache.set(accountId, { timestamp: Date.now(), data: updated });
-    }
+    transactionsCache.update(transaction.accountId, (transactions) =>
+      transactions.map((t) => (t.id === transaction.id ? transaction : t))
+    );
 
     return transaction;
+  },
+
+  clearCache: (accountId?: string): void => {
+    if (accountId) {
+      transactionsCache.delete(accountId);
+    } else {
+      transactionsCache.clear();
+    }
   },
 };
