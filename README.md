@@ -141,6 +141,11 @@ Principais otimizações implementadas:
   - Método `update()` para atualizações atômicas do cache
   - Tipagem genérica para reutilização em diferentes contextos
   - API de transações simplificada com separação de responsabilidades
+- **Migração de Dashboard**: Dashboard do MFE migrado da Fase 2 para a Fase 4, alinhando a solução à nova organização e requisitos do projeto.
+- **Layout, Responsividade e Usabilidade**: Correções no posicionamento das labels dos inputs, evitando quebras e sobreposição.
+  - Ajustes no layout durante a edição de transações, eliminando deslocamentos indesejados da interface.
+  - Revisão geral de layout e responsividade, com melhorias de espaçamento, organização dos elementos e adaptação a diferentes resoluções.
+  - Implementação de validações de inputs (valores mínimo/máximo, bloqueio de negativos, limite de casas decimais, tamanho de descrição e validação de arquivos).
 
 ## Comandos do Storybook
 
