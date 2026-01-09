@@ -18,6 +18,7 @@ import { useTransactions } from "../../../hooks/useTransactions";
 import {
   getCommonInputStyles,
   getCommonInputLabelProps,
+  getSelectInputStyles,
 } from "../../../styles/commonStyles";
 
 import { LoadingButton, NumericInputField, PageTitle } from "../../ui";
@@ -32,7 +33,8 @@ export default function NewTransaction() {
   const { addTransaction } = useTransactions();
   const [type, setType] = useState("");
   const [value, setValue] = useState("");
-  const [error, setError] = useState("");
+  const [typeError, setTypeError] = useState("");
+  const [valueError, setValueError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const theme = useTheme();
@@ -42,6 +44,7 @@ export default function NewTransaction() {
   const [description, setDescription] = useState<string | null>(null);
 
   const commonInputStyles = getCommonInputStyles(theme);
+  const selectInputStyles = getSelectInputStyles(theme, !!typeError);
   const commonInputLabelProps = getCommonInputLabelProps(theme);
 
   const handleFeedback = (variant: VariantType, message: string) => () => {
@@ -51,19 +54,22 @@ export default function NewTransaction() {
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
+    let hasError = false;
+
     if (!type) {
-      setError(t("newTransaction.errorSelectType"));
-      return;
+      setTypeError(t("newTransaction.errorSelectType"));
+      hasError = true;
     }
 
     const parsedValue = parseFloat(value);
     if (!value || isNaN(parsedValue) || parsedValue <= 0) {
-      setError(t("newTransaction.errorInvalidValue"));
-      return;
+      setValueError(t("newTransaction.errorInvalidValue"));
+      hasError = true;
     }
 
+    if (hasError) return;
+
     setIsSubmitting(true);
-    setError("");
 
     const formData = new FormData();
     formData.append("accountId", user?.account || "");
@@ -87,11 +93,12 @@ export default function NewTransaction() {
       setValue("");
       setDescription("");
       setFile(null);
+      setTypeError("");
+      setValueError("");
 
       handleFeedback("success", "Transação cadastrada")();
     } catch (err) {
       console.error("Erro ao adicionar transação:", err);
-      setError("Erro ao adicionar transação.");
       handleFeedback("error", "Erro ao adicionar transação")();
     } finally {
       setIsSubmitting(false);
@@ -115,6 +122,7 @@ export default function NewTransaction() {
             alignSelf: "flex-start",
             mb: 2,
           }}
+          error={!!typeError}
         >
           <InputLabel
             id="transaction-type-label"
@@ -133,9 +141,10 @@ export default function NewTransaction() {
             value={type}
             onChange={(e) => {
               setType(e.target.value);
-              if (error) setError("");
+              if (typeError) setTypeError("");
             }}
             displayEmpty
+            error={!!typeError}
             renderValue={(selected) => {
               if (!selected) {
                 return (
@@ -147,13 +156,8 @@ export default function NewTransaction() {
               return TRANSACTION_TYPES(t).find((type) => type.value === selected)?.label;
             }}
             sx={{
-              ...commonInputStyles,
-              height: "48px",
+              ...selectInputStyles,
               width: { xs: "100%", sm: "400px" },
-              "& .MuiSelect-icon": { color: theme.palette.primary.main },
-              "& .MuiSelect-select": {
-                textAlign: "left",
-              },
             }}
             disabled={isSubmitting}
           >
@@ -166,6 +170,11 @@ export default function NewTransaction() {
               </MenuItem>
             ))}
           </Select>
+          {typeError && (
+            <Typography color="error" variant="caption" sx={{ mt: 0.5, textAlign: "left" }}>
+              {typeError}
+            </Typography>
+          )}
         </FormControl>
 
         <Box display="flex" flexDirection="column" gap={2}>
@@ -186,29 +195,22 @@ export default function NewTransaction() {
             }}
             sx={{
               ...commonInputStyles,
-              m: "0 2",
               width: { xs: "100%", sm: "400px" },
-              mb: 2,
             }}
           />
           <NumericInputField
             value={value}
             onChange={(val) => {
               setValue(val);
-              if (error) setError("");
+              if (valueError) setValueError("");
             }}
             useCurrencyMask
             placeholder={t("newTransaction.valuePlaceholder")}
             sx={{
-              zIndex: 1,
               width: { xs: "100%", sm: "400px" },
-              mb: 2,
-              "& .MuiInputBase-input": {
-                textAlign: "left",
-              },
             }}
-            error={!!error || (value !== "" && parseFloat(value) < 0.01)}
-            helperText={error}
+            error={!!valueError || (value !== "" && parseFloat(value) < 0.01)}
+            helperText={valueError}
             disabled={isSubmitting}
           />
           <FileUpload
@@ -218,12 +220,6 @@ export default function NewTransaction() {
             sx={{ mb: 3 }}
           />
         </Box>
-
-        {error && (
-          <Typography color="error" variant="caption" mt={-1} mb={1}>
-            {error}
-          </Typography>
-        )}
 
         <LoadingButton
           onClick={handleSubmit}

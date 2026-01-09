@@ -1,6 +1,11 @@
 import { TextField, useTheme } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+import {
+  getCommonInputLabelProps,
+  getNumericInputStyles,
+} from "../../../styles/commonStyles";
+
 export interface NumericInputFieldProps {
   value: string;
   onChange: (value: string) => void;
@@ -116,6 +121,9 @@ export default function NumericInputField({
   const displayValue = useCurrencyMask ? formatCurrency(valueToCents(value)) : value;
   const showMinAmountError = value && parseFloat(value) < 0.01;
 
+  const commonInputLabelProps = getCommonInputLabelProps(theme);
+  const numericInputStyles = getNumericInputStyles(theme, error);
+
   return (
     <TextField
       value={displayValue}
@@ -132,27 +140,10 @@ export default function NumericInputField({
         htmlInput: useCurrencyMask
           ? { onKeyDown: handleCurrencyKeyDown, inputMode: "numeric" }
           : { min: 0, step: 0.01, onKeyDown: handleKeyDown },
-        inputLabel: {
-          shrink: true,
-          sx: {
-            top: "-15px",
-            left: "-12px",
-            "&.Mui-focused": { color: theme.palette.primary.main },
-          },
-        },
+        inputLabel: commonInputLabelProps,
       }}
       sx={{
-        backgroundColor: "#fff",
-        border: `1px solid ${theme.palette.primary.main}`,
-        borderRadius: "8px",
-        zIndex: 1,
-        "& .MuiInputBase-input": {
-          padding: "12px 8px",
-          height: "24px",
-          textAlign: "left",
-        },
-        "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-        "& .MuiOutlinedInput-notchedOutline legend": { display: "none" },
+        ...numericInputStyles,
         ...sx,
       }}
     />
