@@ -120,7 +120,6 @@ export default function NewTransaction() {
           sx={{
             width: { xs: "100%", sm: "355px" },
             alignSelf: "flex-start",
-            mb: 2,
           }}
           error={!!typeError}
         >

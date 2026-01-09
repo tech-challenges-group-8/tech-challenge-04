@@ -134,6 +134,13 @@ Principais otimizações implementadas:
 - **Performance**: Lazy loading para rotas, memoização de componentes, re-renders otimizados
 - **Qualidade de Código**: Nomenclatura padronizada, estrutura melhorada, imports consistentes
 - **Experiência do Desenvolvedor**: Hooks customizados, tipos TypeScript centralizados, integração com Storybook
+- **Sistema de Cache Genérico**: Implementada classe `Cache<T>` reutilizável em `src/lib/cache.ts` com as seguintes características:
+  - TTL configurável via variável de ambiente (`VITE_CACHE_TTL_MS`)
+  - Limite máximo de entradas com evição automática (LRU-style)
+  - Limpeza automática de entradas expiradas
+  - Método `update()` para atualizações atômicas do cache
+  - Tipagem genérica para reutilização em diferentes contextos
+  - API de transações simplificada com separação de responsabilidades
 
 ## Comandos do Storybook
 
